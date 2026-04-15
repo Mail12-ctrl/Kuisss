@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Kuis LV 200</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background: linear-gradient(to bottom, #1e3c72, #2a5298);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.game {
+  background:white;
+  width:90%;
+  max-width:350px;
+  border-radius:20px;
+  padding:20px;
+  text-align:center;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border:none;
+  border-radius:10px;
+  background:#2a5298;
+  color:white;
+}
+
+.timer {
+  color:red;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+  <h3 id="level"></h3>
+  <div class="timer" id="timer"></div>
+  <h2 id="soal"></h2>
+  <div id="pilihan"></div>
+  <p id="skor"></p>
+  <p id="highscore"></p>
+</div>
+
+<script>
+
+let level = 1;
+let skor = 0;
+let waktu = 10;
+let interval;
+
+// High Score
+let highScore = localStorage.getItem("highscore") || 0;
+document.getElementById("highscore").innerText = "High Score: " + highScore;
+
+// GENERATE SOAL BERDASARKAN LEVEL
+function generateSoal(level) {
+
+  let soal, opsi, benar;
+
+  // MUDAH
+  if (level <= 20) {
+    let a = Math.floor(Math.random()*10);
+    let b = Math.floor(Math.random()*10);
+    soal = `${a} + ${b} = ?`;
+    benar = a + b;
+  }
+
+  // SEDANG
+  else if (level <= 80) {
+    let a = Math.floor(Math.random()*20);
+    let b = Math.floor(Math.random()*10);
+    soal = `${a} x ${b} = ?`;
+    benar = a * b;
+  }
+
+  // SULIT
+  else if (level <= 150) {
+    let negara = ["Indonesia","Jepang","Perancis","Brazil"];
+    let ibukota = ["Jakarta","Tokyo","Paris","Brasilia"];
+    let i = Math.floor(Math.random()*negara.length);
+
+    soal = `Ibukota ${negara[i]} adalah?`;
+    opsi = [...ibukota].sort(()=>Math.random()-0.5);
+    benar = opsi.indexOf(ibukota[i]);
+
+    return {soal, opsi, benar};
+  }
+
+  // SANGAT SULIT
+  else {
+    soal = "Planet terbesar di tata surya?";
+    opsi = ["Bumi","Mars","Jupiter","Venus"];
+    benar = 2;
+
+    return {soal, opsi, benar};
+  }
+
+  // BUAT OPSI ANGKA
+  opsi = [
+    benar,
+    benar + 1,
+    benar - 1,
+    benar + 2
+  ].sort(()=>Math.random()-0.5);
+
+  benar = opsi.indexOf(benar);
+
+  return {soal, opsi, benar};
+}
+
+let current;
+
+function tampilSoal() {
+
+  if (level > 200) {
+    selesaiGame();
+    return;
+  }
+
+  current = generateSoal(level);
+
+  document.getElementById("level").innerText = "Level " + level;
+  document.getElementById("soal").innerText = current.soal;
+
+  let html = "";
+  current.opsi.forEach((o,i)=>{
+    html += `<button onclick="cekJawaban(${i})">${o}</button>`;
+  });
+
+  document.getElementById("pilihan").innerHTML = html;
+
+  mulaiTimer();
+}
+
+function mulaiTimer() {
+  waktu = 10;
+  document.getElementById("timer").innerText = waktu;
+
+  interval = setInterval(()=>{
+    waktu--;
+    document.getElementById("timer").innerText = waktu;
+
+    if (waktu == 0) {
+      clearInterval(interval);
+      level++;
+      tampilSoal();
+    }
+  },1000);
+}
+
+function cekJawaban(j) {
+  clearInterval(interval);
+
+  if (j == current.benar) {
+    skor++;
+  }
+
+  level++;
+  tampilSoal();
+}
+
+function selesaiGame() {
+  document.getElementById("soal").innerText = "Tamat! 🎉";
+  document.getElementById("pilihan").innerHTML = "";
+  document.getElementById("timer").innerText = "";
+  document.getElementById("skor").innerText = "Skor: " + skor;
+
+  if (skor > highScore) {
+    localStorage.setItem("highscore", skor);
+    document.getElementById("highscore").innerText = "High Score Baru! 🏆 " + skor;
+  }
+}
+
+tampilSoal();
+
+</script>
+
+</body>
+  </html>
